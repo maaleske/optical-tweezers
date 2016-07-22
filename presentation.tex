@@ -1,0 +1,175 @@
+\documentclass{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{default}
+\usepackage{nicefrac}
+\usepackage{microtype}
+
+\begin{document}
+
+\title{Thousands of plots} %Modeling optical tweezers}
+\author{J. \'Sl\k{e}zak,  M. Eskelinen, P. Andersson, M. Cornely, D. Salgado, C. Amorino, D. Fidanov}
+
+\begin{frame}
+\maketitle
+\end{frame}
+
+\begin{frame}
+We found many folders containing cryptic .txt files. We tried plotting the numbers in one of them as a time series:
+\centering
+\includegraphics[width=0.7\textwidth, angle=-90, origin=c]{img/time_series_xy.eps}
+\end{frame}
+
+\begin{frame}
+Let's look at the distributions of values for the two variables:
+\centering
+\includegraphics[width=0.7\textwidth, angle=-90, origin=c]{img/histograms_xy.eps}
+\end{frame}
+
+\begin{frame}
+It looks a bit Gaussian. What say Kolmogorov and Smirnov?
+
+For variable 1, normality is not very probable, but not excluded:
+\[
+\text{p-value} = 0.08741
+\]
+
+For variable 2, it's very abnormal:
+\[
+\text{p-value} = 1.972e-05
+\]
+
+Let's look at the density anyway\dots
+\end{frame}
+
+\begin{frame}
+Pretty close, we'll roll with it.
+\centering
+\includegraphics[height=\textwidth, angle=-90, origin=c]{img/densities_xy.eps}
+\end{frame}
+
+\begin{frame}
+Wait, what about correlation between the two variables? Let's do a line plot:
+
+\centering
+\includegraphics[height=0.8\textwidth, angle=-90, origin=c, trim={2cm 1cm 5cm 2cm}, clip=false]{img/trajectory.eps}\\
+Not much relation, but it's not completely random either. Let's compare\dots
+\end{frame}
+
+\begin{frame}
+\begin{figure}
+\centering
+\includegraphics[height=0.8\textwidth, angle=-90, origin=c, trim={6cm 4cm 18cm 2cm}, clip=false]{img/comparison_2000pts.eps}
+\caption{Left: First 2000 pairs. Right: 2000 random pairs}
+\end{figure}
+The jumps between the consecutive points are small compared to actual random variables. Hints of dynamics\dots
+
+\end{frame}
+
+\begin{frame}
+If there are dynamics, we should see the later values depending on the earlier ones. Can we measure it somehow?
+
+\begin{block}{Yes!}<2->
+For a variable $X$ with mean $\mu$ and variance $\sigma^2$, we can define the autocorrelation as a function of time as
+\[
+ \mathrm{acor}(\tau) = \frac{E[(X_t - \mu)(X_{t+\tau} - \mu)]}{\sigma^2}.
+\]
+This tells us the dependence between values of $X$ that are time $\tau$ apart. The filename mentions a frequency of 5kHz, so the time difference between the points is probably 0.2 ms.
+\end{block}
+
+\end{frame}
+
+\begin{frame}
+\centering
+\includegraphics[height=\textwidth, angle=-90, origin=c, trim={2cm 1cm 8cm 1cm}, clip=false]{img/acf_xy.eps}\\
+
+Noise would only have a peak at 0, so we have something! Let's check these in log scale\dots
+\end{frame}
+
+\begin{frame}
+\centering
+\includegraphics[height=\textwidth, angle=-90, origin=c, trim={2cm 1cm 8cm 1cm}, clip=false]{img/log_acf_xy.eps}\\
+
+The dependence between values seems to decay exponentially\\ (for a while\dots)
+\end{frame}
+
+\begin{frame}
+Since the data is Gaussian, the only stochastic process (dynamic) which produces this decay is the \emph{Ornstein-Uhlenbeck process},
+\[
+ \frac{\mathrm dx(t)}{\mathrm dt} = - k x(t) + \eta(t).
+\]
+Here
+\begin{itemize}
+ \item $k$ is the stiffness of a harmonic force
+ \item $\eta$ is white Gaussian noise
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+The solution of the equation is
+\[
+ x(t) = \int_{-\infty}^t e^{-k (t-s)}\mathrm dB(s),
+\]
+with $B$ denoting Brownian motion ($\mathrm dB(s) = \eta(s)\mathrm ds$).
+
+We find the autocorrelation for this process to be
+%\[
+\begin{align*}
+ \mathrm{acor}(x(\tau)) &= \frac{E[x(0)x(\tau)]}{\sigma^2} \\
+  &=\dots \\
+  &= e^{-kt}.
+\end{align*}
+
+\uncover<2->{\emph{We can fit this to the data to determine $k$!}}
+\end{frame}
+
+\begin{frame}
+\centering
+\includegraphics[height=0.5\textwidth, angle=-90, origin=c, trim={1cm 1cm 1cm 1cm}, clip=false]{img/fit_actual.eps}
+
+The fit gives us the values of $k$ for variables V1 and V2
+\begin{align*}
+ k_{V1} &= 106.00,\\
+ k_{V2} &= 119.25.
+\end{align*}
+
+\end{frame}
+
+\begin{frame}
+How do we know if the $k$ we find is right? \emph{Modelling!}
+
+We can integrate the Ornstein-Uhlenbeck process between two consecutive points $\Delta t$ apart to derive a formula for simulation:
+
+\begin{align*}
+x_{n+1} &= \alpha x_n + z_n,
+\end{align*}
+where
+\begin{align*}
+ \alpha = e^{-k \Delta t}
+\end{align*}
+and $z_n$ is a white Gaussian noise with variance $(1-\alpha^2) \sigma^2$.
+\end{frame}
+
+\begin{frame}
+Let's calculate everything from the model using the $k$ values we found:
+\centering
+\includegraphics[height=\textwidth, angle=-90, origin=c, trim={1cm 1cm 1cm 1cm}, clip=false]{img/everything_modeled.eps}\\
+
+\end{frame}
+
+\begin{frame}
+For the simulated data, the linear fit results in the $k$ values
+\begin{align*}
+ k_{V1} &= 109.37,\\
+ k_{V2} &= 138.61,
+\end{align*}
+which mean that for the first and second variables we are within 4\% and 17\% of the actual values in the simulation, respectively.
+
+\begin{block}{Conclusion:}<2->
+The data can be modeled quite well as an Ornstein-Uhlenbeck process!
+\end{block}
+
+\end{frame}
+
+\end{document}
