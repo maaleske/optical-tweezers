@@ -8,43 +8,48 @@
 
 \begin{document}
 
-\title{Thousands of plots} %Modeling optical tweezers}
-\author{J. \'Sl\k{e}zak,  M. Eskelinen, P. Andersson, M. Cornely, D. Salgado, C. Amorino, D. Fidanov}
+%\title{Thousands of plots} %
+\title{Project 6: Modeling unknown data}
+\date{ECMI MW 2016}
+\author{J. \'Sl\k{e}zak, C. Amorino, P. Andersson, M. Cornely, M. Eskelinen,  D. Fidanov, D. Salgado}
 
 \begin{frame}
 \maketitle
 \end{frame}
 
 \begin{frame}
-We found many folders containing cryptic .txt files. We tried plotting the numbers in one of them as a time series:
-\centering
+We found many directories containing files with two columns of some experimental data. 
+
+We tried plotting the numbers in one of them as a time series:
+  \centering
 \includegraphics[width=0.7\textwidth, angle=-90, origin=c]{img/time_series_xy.eps}
 \end{frame}
 
 \begin{frame}
-Let's look at the distributions of values for the two variables:
+Let's look at the distributions of values for the two variables. Seems pretty Gaussian\dots
+
 \centering
-\includegraphics[width=0.7\textwidth, angle=-90, origin=c]{img/histograms_xy.eps}
+\includegraphics[width=0.6\textwidth, angle=-90, origin=c]{img/histograms_xy.eps}
 \end{frame}
 
+%\begin{frame}
+%It looks a bit Gaussian. What do Kolmogorov and Smirnov say?
+%
+%For variable 1, normality is not excluded by the test:
+%\[
+%\text{p-value} = 0.08741
+%\]
+%
+%For variable 2, it seems quite abnormal:
+%\[
+%\text{p-value} = 1.972e-05
+%\]
+
+%Let's look at the density anyway\dots
+%\end{frame}
+
 \begin{frame}
-It looks a bit Gaussian. What say Kolmogorov and Smirnov?
-
-For variable 1, normality is not very probable, but not excluded:
-\[
-\text{p-value} = 0.08741
-\]
-
-For variable 2, it's very abnormal:
-\[
-\text{p-value} = 1.972e-05
-\]
-
-Let's look at the density anyway\dots
-\end{frame}
-
-\begin{frame}
-Pretty close, we'll roll with it.
+Plotting the kernel density and the theoretical Gaussian, it seems pretty close, we'll roll with it.
 \centering
 \includegraphics[height=\textwidth, angle=-90, origin=c]{img/densities_xy.eps}
 \end{frame}
@@ -54,28 +59,28 @@ Wait, what about correlation between the two variables? Let's do a line plot:
 
 \centering
 \includegraphics[height=0.8\textwidth, angle=-90, origin=c, trim={2cm 1cm 5cm 2cm}, clip=false]{img/trajectory.eps}\\
-Not much relation, but it's not completely random either. Let's compare\dots
+Not much relation between the variables, but the overall behaviour is not completely random either. Let's compare\dots
 \end{frame}
 
 \begin{frame}
 \begin{figure}
 \centering
 \includegraphics[height=0.8\textwidth, angle=-90, origin=c, trim={6cm 4cm 18cm 2cm}, clip=false]{img/comparison_2000pts.eps}
-\caption{Left: First 2000 pairs. Right: 2000 random pairs}
+\caption{Left: First 2000 pairs from the data. Right: 2000 random pairs of independent white Gaussian noise}
 \end{figure}
 The jumps between the consecutive points are small compared to actual random variables. Hints of dynamics\dots
 
 \end{frame}
 
 \begin{frame}
-If there are dynamics, we should see the later values depending on the earlier ones. Can we measure it somehow?
+If there are dynamics behind the data, we should see the later values depending on the earlier ones. Can we measure it somehow?
 
 \begin{block}{Yes!}<2->
 For a variable $X$ with mean $\mu$ and variance $\sigma^2$, we can define the autocorrelation as a function of time as
 \[
  \mathrm{acor}(\tau) = \frac{E[(X_t - \mu)(X_{t+\tau} - \mu)]}{\sigma^2}.
 \]
-This tells us the dependence between values of $X$ that are time $\tau$ apart. The filename mentions a frequency of 5kHz, so the time difference between the points is probably 0.2 ms.
+This tells us the dependence between values of $X$ that are time $\tau$ apart. 
 \end{block}
 
 \end{frame}
@@ -95,13 +100,13 @@ The dependence between values seems to decay exponentially\\ (for a while\dots)
 \end{frame}
 
 \begin{frame}
-Since the data is Gaussian, the only stochastic process (dynamic) which produces this decay is the \emph{Ornstein-Uhlenbeck process},
+The only stochastic process which produces this decay for data that seems Gaussian is the \emph{Ornstein-Uhlenbeck process},
 \[
  \frac{\mathrm dx(t)}{\mathrm dt} = - k x(t) + \eta(t).
 \]
 Here
 \begin{itemize}
- \item $k$ is the stiffness of a harmonic force
+ \item $k$ is the stiffness parameter for a harmonic force
  \item $\eta$ is white Gaussian noise
 \end{itemize}
 \end{frame}
@@ -121,7 +126,7 @@ We find the autocorrelation for this process to be
   &= e^{-kt}.
 \end{align*}
 
-\uncover<2->{\emph{We can fit this to the data to determine $k$!}}
+\uncover<2->{\emph{We can fit this to the autocorrelation of the data to determine $k$!}}
 \end{frame}
 
 \begin{frame}
@@ -149,10 +154,12 @@ where
  \alpha = e^{-k \Delta t}
 \end{align*}
 and $z_n$ is a white Gaussian noise with variance $(1-\alpha^2) \sigma^2$.
+
+The filename mentions a frequency of 5kHz, so the time difference $\Delta t$ between the points is probably 0.2 ms.
 \end{frame}
 
 \begin{frame}
-Let's calculate everything from the model using the $k$ values we found:
+Let's calculate everything from the model using $\Delta t$ and fitted $k$ values:
 \centering
 \includegraphics[height=\textwidth, angle=-90, origin=c, trim={1cm 1cm 1cm 1cm}, clip=false]{img/everything_modeled.eps}\\
 
@@ -166,10 +173,28 @@ For the simulated data, the linear fit results in the $k$ values
 \end{align*}
 which mean that for the first and second variables we are within 4\% and 17\% of the actual values in the simulation, respectively.
 
-\begin{block}{Conclusion:}<2->
-The data can be modeled quite well as an Ornstein-Uhlenbeck process!
-\end{block}
+\end{frame}
 
+\begin{frame}
+Reversing the exact discrete model, we can also solve for the noise $z_n$:
+\begin{align*}
+x_{n+1} &= \alpha x_n + z_n \\
+z_n &= x_{n+1} - \alpha x_n.
+\end{align*}
+
+If we know $\alpha$, we can now calculate $z_n$ from the data!
+\end{frame}
+
+\begin{frame}
+\centering
+\includegraphics[height=0.5\textwidth, angle=-90, origin=c, trim={1cm 1cm 1cm 1cm}, clip=false]{img/noise_acf.eps}\\
+
+Calculating the autocovariance shows only a value of 1 at 0, indicating that the values $z_n$ are in fact white noise.
+
+\begin{block}{Conclusion:}<2->
+The data can be modeled quite well as an Ornstein-Uhlenbeck process
+(and we didn't even need to know it was describing optical tweezers)!
+\end{block}
 \end{frame}
 
 \end{document}
